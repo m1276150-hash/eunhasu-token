@@ -1,2 +1,15 @@
-# eunhasu-token
-Eunhasu Token project for Pi Network integration
+# Eunhasu Token Project
+
+이 저장소는 **Pi Network 공식 토큰과는 무관한 개발/연습용 프로젝트**입니다.  
+본 프로젝트에서 사용되는 "토큰"은 단순히 학습 및 테스트 목적이며,  
+Pi Network의 실제 코인(Pi)과는 아무런 관련이 없습니다.
+
+## 목적
+- GitHub 사용법 학습
+- 토큰 발행 및 관리 연습
+- 블록체인/분산 시스템 이해를 위한 테스트
+
+## 주의사항
+- 본 저장소의 토큰은 **실제 거래 불가**입니다.
+- Pi Network 정책을 준수하며, 외부 거래소 상장과는 무관합니다.
+- 개발/연습용으로만 사용하세요.
