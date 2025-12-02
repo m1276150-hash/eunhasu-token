@@ -1,0 +1,8 @@
+[build]
+  publish = "public"
+
+[[headers]]
+  for = "/.well-known/pi.toml"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
+    Access-Control-Allow-Origin = "*"

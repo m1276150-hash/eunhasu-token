@@ -1,0 +1,7 @@
+프로젝트 루트/
+ ├─ public/
+ │   ├─ index.html
+ │   └─ .well-known/
+ │        └─ pi.toml
+ ├─ netlify.toml
+ └─ _redirects
