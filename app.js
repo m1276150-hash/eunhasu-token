@@ -1,24 +1,23 @@
-// Pi SDK is already loaded and initialized in index.html.
+// Pi SDK is loaded and initialized in index.html.
 
 // 1. Pi Authentication Request
 function authenticatePiUser() {
-    // Attempt authentication when the app is loaded in the Pi Browser.
     Pi.authenticate((user) => {
-        // Authentication success: user data is received.
-        console.log("? Pi Auth Success. User ID:", user.uid);
+        // Authentication success
+        console.log("✅ Pi Auth Success. User ID:", user.uid);
         
-        // Create and append a welcome message to the body.
+        // Add welcome message
         const welcomeMessage = document.createElement('p');
-        welcomeMessage.textContent = `Welcome, ${user.username}! You can now purchase tokens.`; // Text changed to English/non-broken Korean
+        welcomeMessage.textContent = `Welcome, ${user.username}! You can now purchase tokens.`;
         document.body.appendChild(welcomeMessage);
 
-        // Create and append the token purchase button.
+        // Create purchase button
         createPurchaseButton(user);
 
     }, (error) => {
-        // Authentication failure or error handling.
-        console.error("? Pi Auth Failed:", error);
-        alert("Failed to connect to Pi Network. Please ensure you are running this in the Pi Browser.");
+        // Authentication failure
+        console.error("❌ Pi Auth Failed:", error);
+        console.error("Pi Network connection failed. Please ensure you are running this in the Pi Browser.");
     });
 }
 
@@ -28,16 +27,16 @@ function createPurchaseButton(piUser) {
     button.textContent = 'Purchase 100 Eunhasu Token with 1 Pi Test-Coin';
     button.onclick = () => requestEunhasuPayment(piUser);
     
-    // Simple styling for the button
+    // Simple styling for visibility
     button.style.cssText = 'padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; background-color: #f7a500; color: white; border: none; border-radius: 8px;';
 
     document.body.appendChild(button);
 }
 
-// 3. Pi Transaction Request Function (Core Logic)
+// 3. Pi Transaction Request Function
 function requestEunhasuPayment(piUser) {
-    const piPrice = 1;       // Amount to pay in Pi Test-Coin
-    const tokenAmount = 100; // Amount of Eunhasu Token to grant the user
+    const piPrice = 1;      
+    const tokenAmount = 100;
     
     Pi.requestPayment({
         amount: piPrice,
@@ -46,29 +45,55 @@ function requestEunhasuPayment(piUser) {
             action: "buy_eunhasu_token",
             token_code: "EUNHASU",
             token_amount: tokenAmount,
-            pi_uid: piUser.uid     // Identifier for the server to grant tokens to the correct user
+            pi_uid: piUser.uid
         },
         
         onIncomplete: (payment) => { console.log("Transaction pending:", payment); },
         
         onSuccess: (payment) => {
-            // ? Payment successful!
-            console.log("? Pi Test-Coin Payment Success:", payment);
-            alert(`Payment Success! Requesting server to grant ${tokenAmount} Eunhasu Tokens.`);
-            
-            // ?? Server-side payment verification and token granting logic (MOST IMPORTANT)
-            // In a real app, this step requires sending payment.identifier to the server
-            // to verify payment legitimacy via the Pi Payments API and grant tokens.
-            
-            // For testing, we only show a success message here.
+            // ✅ 핵심: 결제 성공 시, 결제 ID를 백엔드 검증 서버로 전송합니다.
+            console.log("✅ Pi Payment Success (Frontend Confirmed):", payment);
+            verifyPaymentOnServer(payment.identifier, piUser.uid, tokenAmount);
+
         },
         
         onFailure: (error) => {
-            console.error("? Transaction Failed:", error);
-            alert("Transaction was cancelled or failed.");
+            console.error("❌ Transaction Failed:", error);
         }
     });
 }
 
-// Start the authentication process when the app is loaded.
-authenticatePiUser();
+// 4. 백엔드 검증 함수 (서버 API 호출을 시도합니다.)
+async function verifyPaymentOnServer(paymentId, piUid, tokenAmount) {
+    const verificationUrl = '/server-api-endpoint'; 
+
+    try {
+        const response = await fetch(verificationUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                paymentId: paymentId,
+                userId: piUid,
+                tokenAmount: tokenAmount
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.verified) {
+            console.log("✅ Server Verification Success. Tokens granted.");
+            alert(`[최종 성공] 서버 검증 완료! ${tokenAmount} Eunhasu Token이 지급되었습니다.`);
+        } else {
+            console.error("❌ Server Verification Failed:", result.message);
+            alert(`[검증 실패] 서버와의 통신에는 성공했지만, 결제 검증에 실패했습니다: ${result.message}`);
+        }
+
+    } catch (error) {
+        console.error("❌ Network or Server Error during verification:", error);
+        alert("[오류] 서버와의 통신에 실패했습니다. (경로 확인 필요)");
+    }
+}
+
+
+// Start the authentication process only after the entire HTML is loaded.
+document.addEventListener('DOMContentLoaded', authenticatePiUser);
