@@ -1,6 +1,10 @@
 [[CURRENCIES]]
-code = "eunhasu"
-issuer = "GB46SU26UEL7F4EOWANFSG2PI56BWRO2C2FZPFHJYYJBO3YYBMPQHVDV..."
-name = "eunhasu token"
+code = "EUNHASU"
+issuer = "GC4WMFQYM2PKZLU4KYKYVPRFJ2HWLTK3PWW22YKSRVBZAJMSK75TPAIF"
+name = "Eunhasu Token"
 desc = "eunhasu token is a Utility Test token designed for the eunhasu ecosystem. It can be used to purchase exclusive STAR, NFTs, unlock special game features, and access various services within the platform."
-image = "https://eunhasu0999.app/icon.png"
+image = "https://eunhasu0999.netlify.app/icon.png"
+
+isplay_decimals = 2
+status = "live"
+is_asset_authority = true
