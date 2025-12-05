@@ -1,3 +1,7 @@
+# ===============================================
+# 토큰 자산 정보 (EUNHASU)
+# ===============================================
+
 [[CURRENCIES]]
 code = "EUNHASU"
 issuer = "GB46SU26UEL7F4EOWANFSG2PI56BWRO2C2FZPFHJYYJBO3YYBMPQHVDV..."
