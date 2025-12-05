@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    // ⭐ Netlify 빌드 실패 해결을 위해 'build' 스크립트 추가 ⭐
-    // 정적 파일 프로젝트이므로, 별도의 빌드 과정 없이 성공적으로 종료하도록 설정합니다.
-    "build": "echo 'Starting Netlify build for static files...' && exit 0" 
+    "build": "echo 'Starting Netlify build for static files...' && exit 0"
   },
   "repository": {
     "type": "git",
