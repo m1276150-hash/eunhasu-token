@@ -134,3 +134,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // 100ms 지연을 주어 Pi SDK가 완전히 로드될 시간을 확보합니다.
     setTimeout(authenticatePiUser, 100); 
 });
+// app.js 파일 내용
+
+// 1. Pi SDK 인증 요청 함수 정의
+function authenticatePiUser() {
+  // Pi.authenticate()를 사용하여 Pi Browser 사용자에게 인증을 요청합니다.
+  // "username" 스코프를 요청합니다.
+  Pi.authenticate(["username"], onAuthenticate, onIncompletePayment, onReady);
+}
+
+// 2. 인증 성공 시 실행되는 콜백 함수
+function onAuthenticate(user) {
+  // 인증 성공 시 사용자 정보(Pi ID 등)를 받습니다.
+  
+  // 3. 화면에 Pi ID 표시
+  const welcomeText = document.querySelector('h1');
+  if (welcomeText) {
+    // h1 태그의 내용을 사용자 이름과 Pi ID로 변경합니다.
+    welcomeText.textContent = `Welcome, ${user.username}! (Pi ID: ${user.uid})`;
+    
+    // 개발자 확인용: 콘솔에 사용자 ID 출력
+    console.log("Pi 인증 성공! 사용자 ID:", user.uid);
+  }
+}
+
+// 4. 나머지 콜백 함수 (현재 단계에서는 비워둡니다)
+function onIncompletePayment(payment) {}
+function onReady() {
+  // Pi SDK가 준비되면 인증 요청을 시작합니다.
+  authenticatePiUser();
+}
