@@ -1,10 +1,13 @@
 {
   "name": "pi-app",
   "version": "1.0.0",
-  "description": "이 저장소는 **Pi Network 공식 토큰과는 무관한 개발/연습용 프로젝트**입니다.  \r 본 프로젝트에서 사용되는 \"토큰\"은 단순히 학습 및 테스트 목적이며,  \r Pi Network의 실제 코인(Pi)과는 아무런 관련이 없습니다.",
+  "description": "이 저장소는 **Pi Network 공식 토큰과는 무관한 개발/연습용 프로젝트**입니다.  \r 본 프로젝트에서 사용되는 \"토큰\"은 단순히 학습 및 테스트 목적이며,  \r Pi Network의 실제 코인(Pi)과는 아무런 관련이 없습니다.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    // ⭐ Netlify 빌드 실패 해결을 위해 'build' 스크립트 추가 ⭐
+    // 정적 파일 프로젝트이므로, 별도의 빌드 과정 없이 성공적으로 종료하도록 설정합니다.
+    "build": "echo 'Starting Netlify build for static files...' && exit 0" 
   },
   "repository": {
     "type": "git",
