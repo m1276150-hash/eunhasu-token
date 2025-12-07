@@ -1,25 +1,7 @@
 {
-  "name": "pi-app",
-  "version": "1.0.0",
-  "description": "이 저장소는 **Pi Network 공식 토큰과는 무관한 개발/연습용 프로젝트**입니다.  \r 본 프로젝트에서 사용되는 \"토큰\"은 단순히 학습 및 테스트 목적이며,  \r Pi Network의 실제 코인(Pi)과는 아무런 관련이 없습니다.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "echo 'Starting Netlify build for static files...' && exit 0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/m1276150-hash/eunhasu-token.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/m1276150-hash/eunhasu-token/issues"
-  },
-  "homepage": "https://github.com/m1276150-hash/eunhasu-token#readme",
+  "type": "module",
   "dependencies": {
-    "stellar-sdk": "^13.3.0"
+    "@stellar/stellar-sdk": "npm:@stellar/stellar-sdk@^14.4.2",
+    "dotenv": "^17.2.3"
   }
 }
