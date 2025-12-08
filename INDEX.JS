@@ -1,81 +1,124 @@
-const util = require("util");
+const StellarSDK = require("@stellar/stellar-sdk");
 
-// [1] ¼öÁ¤: stellar-sdk¿¡¼­ Server Å¬·¡½º¸¦ Á÷Á¢ °¡Á®¿É´Ï´Ù. (´ë¹®ÀÚ S È®ÀÎ)
-const StellarSdk = require("stellar-sdk");
-const Server = StellarSdk.Server;
+// Pi Testnet Horizon Server
+const server = new StellarSDK.Horizon.Server("https://api.testnet.minepi.com");
+const NETWORK_PASSPHRASE = "Pi Testnet";
 
-// [2] ¼öÁ¤: Server »ı¼ºÀÚ¸¦ »ç¿ëÇÏ¿© Pi Testnet ¼­¹ö¿¡ ¿¬°áÇÕ´Ï´Ù.
-// Pi TestnetÀÇ ÁÖ¼Ò¸¦ Á¤È®È÷ ÀÔ·ÂÇØ¾ß ÇÕ´Ï´Ù.
-const server = new Server("https://api.testnet.minepi.com");
+// -----------------------------------------------------------
+// ğŸ”‘ 1. í‚¤ ì •ë³´ ì‚½ì… (ìƒˆë¡œ ìƒì„±í•œ A''ì™€ B'' ì§€ê°‘ì˜ Secret Key)
+// -----------------------------------------------------------
+const issuerKeypair = StellarSDK.Keypair.fromSecret("SACY7F7K3IA6SLWDK4UUVIEE4RIK6F6RHJZRNQSFPM24VUP2YXTSEQ5D"); // A'' ì§€ê°‘ (ë°œí–‰ì)
+const distributorKeypair = StellarSDK.Keypair.fromSecret("SBKCWNZP4INHSCPSNEZ6TVT3Z2K4GBO33SV2RNDCLF3LNV65UZH5B3T2"); // B'' ì§€ê°‘ (ìˆ˜ì‹ ì)
 
-// À¯ÅëÀÚ ºñ¹ĞÅ° (S... ·Î ½ÃÀÛ)
-const distributorSecret = "SCSW5Z2EBBQNR2RZXAK7NKABKRCISD4FMFEW3WASFW2EXXHFVZ5XZAK4";
-const distributorKeypair = StellarSdk.Keypair.fromSecret(distributorSecret);
+// -----------------------------------------------------------
+// ğŸ“ 2. í† í° ë° ë„ë©”ì¸ ì •ë³´ ì„¤ì •
+// -----------------------------------------------------------
+const CUSTOM_TOKEN_CODE = "EUNHASU"; // í† í° ì½”ë“œ ì„¤ì •
+const MINT_AMOUNT = "50000000"; // 5ì²œë§Œ ê°œ
+const HOME_DOMAIN_NAME = "EUNHASU.com"; // Home Domain ì„¤ì • (ì‹¤ì œ ë„ë©”ì¸ìœ¼ë¡œ ë³€ê²½ ê°€ëŠ¥)
+const customToken = new StellarSDK.Asset(CUSTOM_TOKEN_CODE, issuerKeypair.publicKey());
 
-// ¹ßÇàÀÚ °ø°³Å° (G... ·Î ½ÃÀÛ)
-const issuerPublic = "GC4WMFQYM2PKZLU4KYKYVPRFJ2HWLTK3PWW22YKSRVBZAJMSK75TPAIF";
+async function runFullIssuanceProcess() {
+    try {
+        console.log(`\n======================================================`);
+        console.log(`[ğŸš€ í”„ë¡œì„¸ìŠ¤ ì‹œì‘] í† í°: ${CUSTOM_TOKEN_CODE}, ë°œí–‰ì: ${issuerKeypair.publicKey()}`);
+        console.log(`======================================================`);
 
-// ÅäÅ« ÄÚµå (pi.toml°ú µ¿ÀÏÇÏ°Ô ´ë¹®ÀÚ)
-const assetCode = "EUNHASU";
+        // ê¸°ë³¸ ì •ë³´ ë¡œë“œ ë° ìˆ˜ìˆ˜ë£Œ ì„¤ì •
+        const response = await server.ledgers().order("desc").limit(1).call();
+        const latestBlock = response.records[0];
+        const baseFee = latestBlock.base_fee_in_stroops;
+        
+        const distributorAccount = await server.loadAccount(distributorKeypair.publicKey());
+        const issuerAccount = await server.loadAccount(issuerKeypair.publicKey());
+        
+        // ====================================================================================
+        // 1ë‹¨ê³„: B'' ì§€ê°‘ Trustline ì„¤ì •
+        // ====================================================================================
+        console.log("[1/3] B'' ì§€ê°‘ Trustline ì„¤ì • ì¤‘...");
+        
+        const trustlineTransaction = new StellarSDK.TransactionBuilder(distributorAccount, {
+            fee: baseFee,
+            networkPassphrase: NETWORK_PASSPHRASE,
+            timebounds: await server.fetchTimebounds(90),
+        })
+            .addOperation(StellarSDK.Operation.changeTrust({ asset: customToken, limit: undefined }))
+            .build();
 
-async function changeTrust() {
-  try {
-    // À¯ÅëÀÚ °èÁ¤ ºÒ·¯¿À±â
-    const account = await server.loadAccount(distributorKeypair.publicKey());
+        trustlineTransaction.sign(distributorKeypair);
 
-    // ÀÚ»ê Á¤ÀÇ
-    const asset = new StellarSdk.Asset(assetCode, issuerPublic);
+        await server.submitTransaction(trustlineTransaction);
+        console.log("âœ… Trustline created successfully");
 
-    // Æ®·£Àè¼Ç »ı¼º
-    const transaction = new StellarSdk.TransactionBuilder(account, {
-      // NOTE: Pi Network´Â µ¶ÀÚÀûÀÎ ³×Æ®¿öÅ©ÀÌ¹Ç·Î Networks.TESTNETÀÌ ¾Æ´Ñ Pi ³×Æ®¿öÅ©ÀÇ ÆĞ½ºÇÁ·¹ÀÌÁî¸¦ »ç¿ëÇØ¾ß ÇÒ ¼ö ÀÖ½À´Ï´Ù.
-      // Pi TestnetÀÇ ÆĞ½ºÇÁ·¹ÀÌÁî°¡ Stellar Testnet°ú µ¿ÀÏÇÏ´Ù°í °¡Á¤ÇÏ°í ÁøÇàÇÕ´Ï´Ù.
-      fee: StellarSdk.BASE_FEE,
-      networkPassphrase: StellarSdk.Networks.TESTNET, 
-    })
-      .addOperation(StellarSdk.Operation.changeTrust({ asset }))
-      .setTimeout(30)
-      .build();
+        // ====================================================================================
+        // 2ë‹¨ê³„: í† í° ë°œí–‰ (A''ì—ì„œ B''ë¡œ 5ì²œë§Œ EUNHASU ì „ì†¡)
+        // ====================================================================================
+        console.log(`[2/3] í† í° ë°œí–‰ (${MINT_AMOUNT} ê°œ) ë° ì „ì†¡ ì¤‘...`);
+        
+        const paymentTransaction = new StellarSDK.TransactionBuilder(issuerAccount, {
+            fee: baseFee,
+            networkPassphrase: NETWORK_PASSPHRASE,
+            timebounds: await server.fetchTimebounds(90),
+        })
+            .addOperation(
+                StellarSDK.Operation.payment({
+                    destination: distributorKeypair.publicKey(),
+                    asset: customToken,
+                    amount: MINT_AMOUNT,
+                })
+            )
+            .build(); 
 
-    // ¼­¸í
-    transaction.sign(distributorKeypair);
+        paymentTransaction.sign(issuerKeypair);
 
-    // Á¦Ãâ
-    const result = await server.submitTransaction(transaction);
-    console.log("? ½Å·Ú¼± ¼³Á¤ ¼º°ø:", result.hash);
-  } catch (error) {
-    console.error("? ¿¡·¯ ¹ß»ı:", error.response?.data || error);
+        await server.submitTransaction(paymentTransaction);
+        console.log("âœ… Token issued successfully");
 
-    if (error.response?.data?.extras) {
-      const extras = error.response.data.extras;
+        // ====================================================================================
+        // 3ë‹¨ê³„: Home Domain ì„¤ì • (ë°œí–‰ìì˜ ë©”íƒ€ë°ì´í„° ì„¤ì •)
+        // ====================================================================================
+        // í† í° ë°œí–‰ í›„ ì‹œí€€ìŠ¤ ë²ˆí˜¸ê°€ ì¦ê°€í–ˆìœ¼ë¯€ë¡œ, ê³„ì •ì„ ë‹¤ì‹œ ë¡œë“œí•´ì•¼ í•©ë‹ˆë‹¤.
+        const updatedIssuerAccount = await server.loadAccount(issuerKeypair.publicKey());
+        
+        console.log(`[3/3] Home Domain (${HOME_DOMAIN_NAME}) ì„¤ì • ì¤‘...`);
 
-      // extras ÀüÃ¼ Ãâ·Â
-      console.log("?? extras ÀüÃ¼:", util.inspect(extras, { depth: null, colors: true }));
+        const setOptionsTransaction = new StellarSDK.TransactionBuilder(updatedIssuerAccount, {
+            fee: baseFee,
+            networkPassphrase: NETWORK_PASSPHRASE,
+            timebounds: await server.fetchTimebounds(90),
+        })
+            .addOperation(StellarSDK.Operation.setOptions({ homeDomain: HOME_DOMAIN_NAME })) 
+            .build();
 
-      // result_codes¸¸ µû·Î Ãâ·Â
-      if (extras.result_codes) {
-        console.log("?? result_codes:", extras.result_codes);
-      }
+        setOptionsTransaction.sign(issuerKeypair);
 
-      // result_xdr µğÄÚµù
-      if (extras.result_xdr) {
-        try {
-          const decoded = StellarSdk.xdr.TransactionResult.fromXDR(extras.result_xdr, "base64");
-          console.log("?? µğÄÚµùµÈ result_xdr:", util.inspect(decoded, { depth: null, colors: true }));
-        } catch (decodeError) {
-          console.error("?? result_xdr µğÄÚµù ½ÇÆĞ:", decodeError);
+        await server.submitTransaction(setOptionsTransaction);
+        console.log(`âœ… Home Domain ${HOME_DOMAIN_NAME} ì„¤ì • ì„±ê³µ!`);
+
+
+        // ====================================================================================
+        // ìµœì¢… í™•ì¸: B'' ì§€ê°‘ì˜ ì”ê³  í™•ì¸
+        // ====================================================================================
+        console.log("\n[âœ¨ ìµœì¢… ê²°ê³¼] B'' ì§€ê°‘ì˜ ì”ê³  í™•ì¸ ì¤‘...");
+        const finalDistributorAccount = await server.loadAccount(distributorKeypair.publicKey());
+        finalDistributorAccount.balances.forEach((balance) => {
+            if (balance.asset_code === CUSTOM_TOKEN_CODE && balance.asset_issuer === issuerKeypair.publicKey()) {
+                console.log(`\n======================================`);
+                console.log(`â­ ${balance.asset_code} ìµœì¢… ì”ê³ : ${balance.balance} (5ì²œë§Œ ê°œ í™•ì¸!)`);
+                console.log(`======================================\n`);
+            } else if (balance.asset_type === "native") {
+                console.log(`Test-Pi (XLM) ì”ê³ : ${balance.balance}`);
+            }
+        });
+
+    } catch (error) {
+        console.error("âŒ í”„ë¡œì„¸ìŠ¤ ì²˜ë¦¬ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
+        if (error.response && error.response.data && error.response.data.extras && error.response.data.extras.result_codes) {
+             console.error("Result Codes:", error.response.data.extras.result_codes);
+        } else {
+             console.error(error.message);
         }
-      }
     }
-    
-    // Stellar Error ÄÚµå¿¡ ´ëÇÑ Ãß°¡ µğ¹ö±ë ÆÁ
-    if (error.response?.data?.title === "Transaction Failed") {
-        console.log("\n?? Æ®·£Àè¼Ç ½ÇÆĞ (Transaction Failed) ÆÁ:");
-        console.log("- °èÁ¤(distributorKeypair)ÀÌ Pi Testnet¿¡ »ı¼ºµÇ¾î ÀÖ´ÂÁö È®ÀÎÇÏ¼¼¿ä.");
-        console.log("- ÀÚ»ê(EUNHASU)ÀÇ ¹ßÇàÀÚ(GB46SU...) °ø°³Å°°¡ ¸Â´ÂÁö È®ÀÎÇÏ¼¼¿ä.");
-    }
-  }
 }
 
-// ½ÇÇà
-changeTrust();
+runFullIssuanceProcess();

@@ -1,0 +1,16 @@
+# ==============================================================================
+# CONTACTS (필요하다면 수정하세요)
+# ==============================================================================
+DOCUMENTATION = "https://www.EUNHASU.com" 
+ORG_CONTACT = "support@eunhasu.com" 
+
+# ==============================================================================
+# CURRENCIES (EUNHASU 토큰 정보)
+# ==============================================================================
+[[CURRENCIES]]
+code = "EUNHASU"
+issuer = "GDBT5DQDQD7ATSXIMHU3BIB45XOFYSBNDXI5G7BISBYGWGRAIBAOGP2W" 
+status = "live"
+display_decimals = 7
+name = "Eunhasu Token"
+desc = "This is the official test token for the Eunhasu project, issued on the Pi Testnet."
