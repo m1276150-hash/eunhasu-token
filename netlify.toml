@@ -1,8 +1,14 @@
-[build]
-  publish = "public"
-
+# Netlify가 /stellar.toml 경로에 대해 MIME Type을 강제로 지정하도록 설정합니다.
 [[headers]]
-  for = "/.well-known/pi.toml"
+  for = "/stellar.toml"
   [headers.values]
-    Content-Type = "text/plain; charset=utf-8"
-    Access-Control-Allow-Origin = "*"
+    # Stellar 프로토콜에서 요구하는 파일 형식 (Content-Type)을 명시합니다.
+    Content-Type = "application/toml"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "public, max-age=60"
+
+# 혹시 모를 경로 문제에 대비하여 200 상태 코드를 강제합니다. (선택적이지만 안전한 조치)
+[[redirects]]
+  from = "/stellar.toml"
+  to = "/stellar.toml"
+  status = 200
